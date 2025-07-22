@@ -14,18 +14,20 @@ struct LocationDetailView: View {
         GridItem(.flexible())
     ]
     
+    var location: DDGLocation
+    
     var body: some View {
         VStack(spacing: 16) {
-            BannerImageView(imageName: .defaultBannerAsset)
+            BannerImageView(image: location.createBannerImage())
             
             HStack {
-                AddressView(address: "123 Main Street, Anytown, USA")
+                AddressView(address: location.address)
                 
                 Spacer()
             }
             .padding(.leading, 20)
             
-            DescriptionView(description: "This is a test description. This is a test description. This is a test description. This is a test description. This is a test description.")
+            DescriptionView(description: location.description)
             
             ZStack {
                 Capsule()
@@ -38,7 +40,7 @@ struct LocationDetailView: View {
                         LocationActionButton(iconName: "location.fill", color: .brandPrimary)
                     }
                     
-                    Link(destination: URL(string: "https://www.apple.com")!, label: {
+                    Link(destination: URL(string: location.websiteURL)!, label: {
                         LocationActionButton(iconName: "network", color: .brandPrimary)
                     })
                     
@@ -63,36 +65,36 @@ struct LocationDetailView: View {
             
             ScrollView {
                 LazyVGrid(columns: columns, content: {
-                    FirstNameAvatarView(name: "Name")
-                    FirstNameAvatarView(name: "Name")
-                    FirstNameAvatarView(name: "Name")
-                    FirstNameAvatarView(name: "Name")
-                    FirstNameAvatarView(name: "Name")
-                    FirstNameAvatarView(name: "Name")
-                    FirstNameAvatarView(name: "Name")
-                    FirstNameAvatarView(name: "Name")
+                    FirstNameAvatarView(image: PlaceHolderImage.avatar, name: "Name")
+                    FirstNameAvatarView(image: PlaceHolderImage.avatar, name: "Name")
+                    FirstNameAvatarView(image: PlaceHolderImage.avatar, name: "Name")
+                    FirstNameAvatarView(image: PlaceHolderImage.avatar, name: "Name")
+                    FirstNameAvatarView(image: PlaceHolderImage.avatar, name: "Name")
+                    FirstNameAvatarView(image: PlaceHolderImage.avatar, name: "Name")
+                    FirstNameAvatarView(image: PlaceHolderImage.avatar, name: "Name")
+                    FirstNameAvatarView(image: PlaceHolderImage.avatar, name: "Name")
                 })
             }
             
             Spacer()
         }
-        .navigationTitle("Location Name")
+        .navigationTitle(location.name)
         .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 #Preview {
     NavigationStack {
-        LocationDetailView()
+        LocationDetailView(location: DDGLocation(record: MockData.location))
             .navigationTitle("Location name")
     }
 }
 
 struct BannerImageView: View {
-    let imageName: ImageResource
+    let image: UIImage
     
     var body: some View {
-        Image(.defaultBannerAsset)
+        Image(uiImage: image)
             .resizable()
             .scaledToFill()
             .frame(height: 120)
