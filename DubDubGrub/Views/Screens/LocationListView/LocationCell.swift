@@ -8,9 +8,12 @@
 import SwiftUI
 
 struct LocationCell: View {
+    
+    var location: DDGLocation
+    
     var body: some View {
         HStack {
-            Image(.defaultSquareAsset)
+            Image(uiImage: location.createSquareImage())
                 .resizable()
                 .scaledToFit()
                 .frame(height: 80)
@@ -18,18 +21,18 @@ struct LocationCell: View {
                 .padding(.vertical, 8)
             
             VStack(alignment: .leading){
-                Text("Test Location Name")
+                Text(location.name)
                     .font(.title2)
                     .fontWeight(.semibold)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
                 
                 HStack {
-                    AvatarView(size: 35)
-                    AvatarView(size: 35)
-                    AvatarView(size: 35)
-                    AvatarView(size: 35)
-                    AvatarView(size: 35)
+                    AvatarView(image: PlaceHolderImage.avatar, size: 35)
+                    AvatarView(image: PlaceHolderImage.avatar, size: 35)
+                    AvatarView(image: PlaceHolderImage.avatar, size: 35)
+                    AvatarView(image: PlaceHolderImage.avatar, size: 35)
+                    AvatarView(image: PlaceHolderImage.avatar, size: 35)
                 }
             }
             .padding(.leading, 8)
@@ -38,5 +41,5 @@ struct LocationCell: View {
 }
 
 #Preview {
-    LocationCell()
+    LocationCell(location: DDGLocation(record: MockData.location))
 }
