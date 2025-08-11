@@ -8,11 +8,25 @@
 import SwiftUI
 
 struct CharactersRemainView: View {
+    var currentCount: Int
+    let limitBio: Int
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Text("Bio: ")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        +
+        Text("\(limitBio - currentCount)")
+            .font(.caption)
+            .foregroundStyle(currentCount >= limitBio ? .red : .brandPrimary)
+            .fontWeight(.bold)
+        +
+        Text(" characters remain")
+            .font(.caption)
+            .foregroundStyle(.secondary)
     }
 }
 
 #Preview {
-    CharactersRemainView()
+    CharactersRemainView(currentCount: 20, limitBio: 100)
 }

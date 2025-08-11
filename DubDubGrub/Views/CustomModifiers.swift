@@ -22,6 +22,5 @@ struct ButtonStyle: ViewModifier {
             .bold()
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .tint(.brandPrimary)
     }
 }

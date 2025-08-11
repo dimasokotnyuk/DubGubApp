@@ -8,14 +8,17 @@
 import SwiftUI
 
 struct LogoView: View {
+    
+    var frameHeight: CGFloat
+    
     var body: some View {
         Image(.ddgMapLogo)
             .resizable()
             .scaledToFit()
-            .frame(height: 70)
+            .frame(height: frameHeight)
     }
 }
 
 #Preview {
-    LogoView()
+    LogoView(frameHeight: 75)
 }

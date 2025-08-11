@@ -5,4 +5,12 @@
 //  Created by Дмитро Сокотнюк on 30.07.2025.
 //
 
-import Foundation
+import UIKit
+
+struct HapticManager {
+    
+    static func playSuccess() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+    }
+}

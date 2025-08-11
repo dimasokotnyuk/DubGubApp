@@ -9,54 +9,63 @@ import SwiftUI
 import PhotosUI
 import CloudKit
 
+enum ProfileTextField {
+    case firstName, lastName, companyName, bio
+}
+
 struct ProfileView: View {
-    @State private var firstName: String    = ""
-    @State private var lastName: String     = ""
-    @State private var companyName: String  = ""
-    @State private var bio: String          = ""
-    @State private var avatar               = PlaceHolderImage.avatar
-    @State private var alertItem: AlertItem?
-    let limitBio = 100
-    @FocusState private var nameIsFocused: Bool
+    
+    @State private var viewModel = ProfileViewModel()
+    @FocusState private var focusedTextField: ProfileTextField?
     
     var body: some View {
-        VStack {
-            ZStack {
-                NameBackgroundView()
-                
+        ZStack {
+            VStack {
                 HStack() {
-                    ProfileImageView(avatar: $avatar)
+                    ProfileImageView(avatar: $viewModel.avatar, selectedImage: $viewModel.selectedImage)
                     
                     VStack(spacing: 1) {
-                        TextField("First Name", text: $firstName)
+                        TextField("First Name", text: $viewModel.firstName)
                             .modifier(ProfileNameText())
-                            .focused($nameIsFocused)
+                            .focused($focusedTextField, equals: .firstName)
+                            .onSubmit {
+                                focusedTextField = .lastName
+                            }
+                            .submitLabel(.next)
                             .padding(.trailing, 28)
                             .overlay(alignment: .trailing) {
-                                if !firstName.isEmpty {
+                                if !viewModel.firstName.isEmpty {
                                     Image(systemName: "checkmark.circle")
                                         .foregroundStyle(.green)
                                         .padding(.trailing, 6)
                                 }
                             }
                         
-                        TextField("Last Name", text: $lastName)
+                        TextField("Last Name", text: $viewModel.lastName)
                             .modifier(ProfileNameText())
-                            .focused($nameIsFocused)
+                            .focused($focusedTextField, equals: .lastName)
+                            .onSubmit {
+                                focusedTextField = .companyName
+                            }
+                            .submitLabel(.next)
                             .padding(.trailing, 28)
                             .overlay(alignment: .trailing) {
-                                if !lastName.isEmpty {
+                                if !viewModel.lastName.isEmpty {
                                     Image(systemName: "checkmark.circle")
                                         .foregroundStyle(.green)
                                         .padding(.trailing, 6)
                                 }
                             }
                         
-                        TextField("Company Name", text: $companyName)
-                            .focused($nameIsFocused)
+                        TextField("Company Name", text: $viewModel.companyName)
+                            .focused($focusedTextField, equals: .companyName)
+                            .onSubmit {
+                                focusedTextField = .bio
+                            }
+                            .submitLabel(.next)
                             .padding(.trailing, 28)
                             .overlay(alignment: .trailing) {
-                                if !companyName.isEmpty {
+                                if !viewModel.companyName.isEmpty {
                                     Image(systemName: "checkmark.circle")
                                         .foregroundStyle(.green)
                                         .padding(.trailing, 6)
@@ -67,146 +76,71 @@ struct ProfileView: View {
                     
                     Spacer()
                 }
+                .padding(.vertical)
+                .background(Color(.secondarySystemBackground))
+                .clipShape(.rect(cornerRadius: 12))
                 .padding(.horizontal)
-            }
-            
-            VStack(alignment: .leading) {
-                CharactersRemainView(currentCount: bio.count, limitBio: limitBio)
                 
-                TextEditor(text: $bio)
-                    .focused($nameIsFocused)
-                    .onChange(of: bio) {
-                        if bio.count > limitBio {
-                            bio = String(bio.prefix(limitBio))
+                VStack(alignment: .leading) {
+                    HStack {
+                        CharactersRemainView(currentCount: viewModel.bio.count, limitBio: viewModel.limitBio)
+                        
+                        Spacer()
+                        
+                        if viewModel.isCheckedIn {
+                            Button {
+                                viewModel.checkOut()
+                            } label: {
+                                CheckOutButton()
+                            }
+                            .disabled(viewModel.isLoading)
                         }
                     }
-                    .frame(height: 100)
-                    .padding()
-                    .overlay(RoundedRectangle(cornerRadius: 8)
-                        .stroke(!bio.isEmpty ? Color.green : Color.secondary, lineWidth: 1))
+                    
+                    TextField("", text: $viewModel.bio, axis: .vertical).focused($focusedTextField, equals: .bio)
+                    //                        .frame(height: 100)
+                        .padding()
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(viewModel.bioStrokeColor, lineWidth: 1)
+                        }
+                }
+                .padding()
                 
+                Spacer()
+                
+                Button {
+                    viewModel.determineButtonAction()
+                } label: {
+                    Text(viewModel.titleButton)
+                }
+                .padding(.bottom, 20)
+                .modifier(ButtonStyle())
+                .disabled(!viewModel.isValidProfile())
             }
-            .padding()
             
-            Spacer()
-            
-            Button {
-//                createProfile()
-            } label: {
-                Text("Create Profile")
-            }
-            .modifier(ButtonStyle())
-            .padding(.bottom, 20)
-            .disabled(!isValidProfile())
+            if viewModel.isLoading { LoadingView() }
         }
         .navigationTitle("Profile")
-        .onAppear {
-            getProfile()
+        .navigationBarTitleDisplayMode(DeviceType.isiPhone12Mini ? .inline : .automatic)
+        .ignoresSafeArea(.keyboard)
+        .task {
+            viewModel.getProfile()
+            viewModel.getCheckedInStatus()
         }
-        .alert(item: $alertItem) { alertItem in
-            Alert(title: alertItem.title, message: alertItem.message, dismissButton: alertItem.dismissButtonText)
-        }
+        .alert(item: $viewModel.alertItem) { $0.alert }
         .toolbar {
-            if nameIsFocused {
+            if focusedTextField != nil {
                 Button {
-                    //                dismissKeyboard()
-                    nameIsFocused = false
+                    focusedTextField = nil
                 } label: {
                     Image(systemName: "keyboard.chevron.compact.down")
                 }
             }
         }
     }
-    
-    func isValidProfile() -> Bool {
-        guard !firstName.isEmpty,
-              !lastName.isEmpty,
-              !companyName.isEmpty,
-              !bio.isEmpty,
-              avatar != PlaceHolderImage.avatar,
-              bio.count < limitBio else {
-            return false
-        }
-        
-        return true
-    }
-    
-    func createProfile() {
-        guard isValidProfile() else {
-            return
-        }
-        
-        let profileRecord = CKRecord(recordType: RecordType.profile)
-        profileRecord[DDGProfile.kFirstName] = firstName
-        profileRecord[DDGProfile.kLastName] = lastName
-        profileRecord[DDGProfile.kCompanyName] = companyName
-        profileRecord[DDGProfile.kBio] = bio
-        profileRecord[DDGProfile.kAvatar] = avatar.convertToCKAsset()
-        
-        CKContainer.default().fetchUserRecordID { recordID, error in
-            guard let recordID, error == nil else {
-                print(error!.localizedDescription)
-                return
-            }
-            
-            CKContainer.default().publicCloudDatabase.fetch(withRecordID: recordID) { userRecord, error in
-                guard let userRecord, error == nil else {
-                    print(error!.localizedDescription)
-                    return
-                }
-                
-                userRecord["userProfile"] = CKRecord.Reference(recordID: profileRecord.recordID, action: .none)
-                
-                let operation = CKModifyRecordsOperation(recordsToSave: [userRecord, profileRecord])
-                operation.modifyRecordsCompletionBlock = { savedRecords, _, error in
-                    guard let savedRecords, error == nil else {
-                        print(error!.localizedDescription)
-                        return
-                    }
-                    
-                    print(savedRecords)
-                }
-                
-                CKContainer.default().publicCloudDatabase.add(operation)
-            }
-        }
-    }
-    
-    func getProfile() {
-        CKContainer.default().fetchUserRecordID { recordID, error in
-            guard let recordID, error == nil else {
-                print(error!.localizedDescription)
-                return
-            }
-            
-            CKContainer.default().publicCloudDatabase.fetch(withRecordID: recordID) { userRecord, error in
-                guard let userRecord, error == nil else {
-                    print(error!.localizedDescription)
-                    return
-                }
-                
-                let profileReference = userRecord["userProfile"] as! CKRecord.Reference
-                let profileRecordID = profileReference.recordID
-                
-                CKContainer.default().publicCloudDatabase.fetch(withRecordID: profileRecordID) { profileRecord, error in
-                    guard let profileRecord, error == nil else {
-                        print(error!.localizedDescription)
-                        return
-                    }
-                    
-                    DispatchQueue.main.async {
-                        let profile = DDGProfile(record: profileRecord)
-                        firstName = profile.firstName
-                        lastName = profile.lastName
-                        companyName = profile.companyName
-                        bio = profile.bio
-                        avatar = profile.createAvatarImage()
-                    }
-                }
-            }
-        }
-    }
 }
+
 
 #Preview {
     NavigationStack {
@@ -214,18 +148,10 @@ struct ProfileView: View {
     }
 }
 
-struct NameBackgroundView: View {
-    var body: some View {
-        Color(.secondarySystemBackground)
-            .frame(height: 120)
-            .cornerRadius(12)
-            .padding(.horizontal)
-    }
-}
 
-struct ProfileImageView: View {
+fileprivate struct ProfileImageView: View {
     @Binding var avatar: UIImage
-    @State private var selectedImage: PhotosPickerItem?
+    @Binding var selectedImage: PhotosPickerItem?
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -254,22 +180,14 @@ struct ProfileImageView: View {
     }
 }
 
-struct CharactersRemainView: View {
-    var currentCount: Int
-    let limitBio: Int
-    
+fileprivate struct CheckOutButton: View {
     var body: some View {
-        Text("Bio: ")
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        +
-        Text("\(limitBio - currentCount)")
-            .font(.caption)
-            .foregroundStyle(currentCount == limitBio ? .red : .brandPrimary)
-            .fontWeight(.bold)
-        +
-        Text(" characters remain")
-            .font(.caption)
-            .foregroundStyle(.secondary)
+        Label("Check out", systemImage: "mappin.and.ellipse")
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(.white)
+            .padding(10)
+            .frame(height: 28)
+            .background(.red)
+            .cornerRadius(8)
     }
 }

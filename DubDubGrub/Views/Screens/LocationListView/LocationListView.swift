@@ -10,28 +10,31 @@ import SwiftUI
 struct LocationListView: View {
     
     @EnvironmentObject private var locationManager: LocationManager
+    @State private var viewModel = LocationListViewModel()
+    @Environment(\.dynamicTypeSize) var dynamicTypeSize
     
     var body: some View {
         NavigationStack {
             List {
                 ForEach(locationManager.locations) { location in
-                    NavigationLink(destination: LocationDetailView(viewModel: LocationDetailViewModel(location: location))) {
-                        LocationCell(location: location)
+                    NavigationLink(value: location) {
+                        LocationCell(location: location,
+                                     profiles: viewModel.checkedInProfiles[location.id, default: []])
                     }
                 }
             }
-            .onAppear {
-                CloudKitManager.shared.getCheckedInProfilesDictionary { result in
-                        switch result {
-                        case .success(let checkedInProfiles):
-                            print(checkedInProfiles)
-                        case .failure(_):
-                            print("Error getting back dictionary")
-                        }
-                }
-            }
-            .listStyle(.plain)
             .navigationTitle("Grub Spots")
+            .navigationDestination(for: DDGLocation.self, destination: { location in
+                viewModel.createLocationDetailView(for: location, in: dynamicTypeSize)
+            })
+            .task {
+                await viewModel.getCheckedInProfilesDictionary()
+            }
+            .alert(item: $viewModel.alertItem) { $0.alert }
+            .listStyle(.plain)
+            .refreshable {
+                await viewModel.getCheckedInProfilesDictionary()
+            }
             .navigationBarTitleDisplayMode(.inline)
         }
     }

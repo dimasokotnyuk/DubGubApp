@@ -8,8 +8,13 @@
 import SwiftUI
 
 struct XDismissButton: View {
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Image(systemName: "xmark.circle.fill")
+            .resizable()
+            .frame(width: 32, height: 32)
+            .foregroundStyle(.brandPrimary)
+            .frame(width: 50, height: 50)
     }
 }
 

@@ -8,13 +8,15 @@
 import SwiftUI
 
 struct FirstNameAvatarView: View {
-    let name: String
+    
+    var profile: DDGProfile
+    @Environment(\.dynamicTypeSize) var dynamicTypeSize
     
     var body: some View {
         VStack {
-            AvatarView(size: 64)
+            AvatarView(image: profile.avatarImage, size: dynamicTypeSize > .xxxLarge ? 100 : 64)
             
-            Text(name)
+            Text(profile.firstName)
                 .bold()
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
@@ -23,5 +25,5 @@ struct FirstNameAvatarView: View {
 }
 
 #Preview {
-    FirstNameAvatarView(name: "Name")
+    FirstNameAvatarView(profile: DDGProfile(record: MockData.profile))
 }
