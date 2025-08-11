@@ -37,7 +37,6 @@ DubDubGrub is an iOS application built with SwiftUI that enables users to discov
 
   * Plays success feedback for key actions like profile save and check-in.
 
----
 
 ## **Architecture & Technologies**
 
