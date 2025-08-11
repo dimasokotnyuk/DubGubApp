@@ -72,3 +72,9 @@ DubDubGrub is an iOS application built with SwiftUI that enables users to discov
 
   * Centralized `Constants.swift` for record type strings, placeholder images, and device checks.
   * `AlertContext` for reusable, descriptive error and success alerts.
+ 
+    ![](https://github.com/dimasokotnyuk/DubGubApp/blob/main/1.png?raw=true)
+    ![](https://github.com/dimasokotnyuk/DubGubApp/blob/main/2.png?raw=true)
+    ![](https://github.com/dimasokotnyuk/DubGubApp/blob/main/3.png?raw=true)
+    ![](https://github.com/dimasokotnyuk/DubGubApp/blob/main/4.png?raw=true)
+    ![](https://github.com/dimasokotnyuk/DubGubApp/blob/main/5.png?raw=true)
